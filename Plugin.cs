@@ -91,8 +91,10 @@ namespace TinyCart
                 new ConfigDescription("How fast the size change plays.", new AcceptableValueRange<float>(0.25f, 10f)));
             activeInShop = Config.Bind("General", "Active in shop", false,
                 "Shrink things placed in the cart while in the shop.");
-            enemyNames = Config.Bind("Enemies", "Enemies to shrink", "Duck=0.3,Apex Predator=0.3,Gnome",
-                "Comma separated list of enemy names that shrink when they end up in a cart. Add =size to give one its own size, for example Duck=0.3; others use Scale below. Empty = no enemies. * = every enemy. Only matters for enemies the cart does not kill.");
+            enemyNames = Config.Bind("Enemies", "Enemies to shrink", "Duck,Apex Predator,Gnome",
+                "Comma separated list of enemy names that shrink when they end up in a cart. Add =size to give one its own size, for example Duck=0.7; others use Scale below. Empty = no enemies. * = every enemy. Only matters for enemies the cart does not kill.");
+            // 0.3 put the duck partly under the floor; move untouched configs to the new default.
+            if (enemyNames.Value == "Duck=0.3,Apex Predator=0.3,Gnome") enemyNames.Value = (string)enemyNames.DefaultValue;
             enemyScale = Config.Bind("Enemies", "Scale", 0.5f,
                 new ConfigDescription("Size of a shrunk enemy.", new AcceptableValueRange<float>(0.1f, 1f)));
             enemyGrowBack = Config.Bind("Enemies", "Grow back when out of cart", false,

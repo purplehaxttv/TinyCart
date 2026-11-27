@@ -7,7 +7,7 @@ A shrinking cart for R.E.P.O. that stays calm: things go small when they go in t
 - **Valuables and shop items** shrink to half size in any cart and weigh less, so a full cart is easier to push. They grow back about 1.5 seconds after leaving the cart.
 - **No flickering.** A shrunk valuable does not pop back to full size when it gets bumped or loses value, and nothing changes size while it sits on the cart's edge.
 - **Enemies that touch the cart die**, except the ones on the spared list.
-- **Ducks and gnomes are spared and shrink instead.** The duck goes down to 0.3 size, gnomes to 0.5, and they stay tiny for the rest of the level.
+- **Ducks and gnomes are spared and shrink instead.** They go down to half size and stay tiny for the rest of the level.
 - **Players** standing or lying in the big cart shrink, and always grow back after they leave it.
 
 Pairs nicely with [FriendlyDuck](https://thunderstore.io/c/repo/p/purplehaxttv/FriendlyDuck/).
@@ -39,7 +39,7 @@ Everything can be changed in the in-game mod settings (with REPOConfig installed
 | Enemies | Kill enemies in cart | true | Enemies touching the cart die |
 | Enemies | Enemies spared | Duck,Apex Predator,Gnome | Enemies the cart never kills |
 | Enemies | Kill reach | 0.3 | How far outside the basket still counts as a hit, in metres |
-| Enemies | Enemies to shrink | Duck=0.3,Apex Predator=0.3,Gnome | Enemies that shrink in a cart. `Name=size` gives one its own size |
+| Enemies | Enemies to shrink | Duck,Apex Predator,Gnome | Enemies that shrink in a cart. `Name=size` gives one its own size |
 | Enemies | Scale | 0.5 | Size for listed enemies without their own size |
 | Enemies | Grow back when out of cart | false | Off keeps a shrunk enemy small for the level |
 | Enemies | Grow back when hurt | false | A shrunk enemy grows back on damage |
