@@ -9,7 +9,7 @@ A shrinking cart for R.E.P.O. that stays calm: things go small when they go in t
 - **No flickering.** A shrunk valuable does not pop back to full size when it gets bumped or loses value, and nothing changes size while it sits on the cart's edge.
 - **Enemies that touch the cart die**, except the ones on the spared list.
 - **Ducks and gnomes are spared and shrink instead.** They go down to half size and stay tiny for the rest of the level.
-- **Players** standing or lying in the big cart shrink, and always grow back after they leave it.
+- **Players** standing or lying in the big cart shrink, with a chance to grow bigger instead. They keep that size for a while after leaving the cart (20 seconds by default), then return to normal.
 
 Pairs nicely with [FriendlyDuck](https://thunderstore.io/c/repo/p/purplehaxttv/FriendlyDuck/).
 
@@ -17,7 +17,7 @@ Pairs nicely with [FriendlyDuck](https://thunderstore.io/c/repo/p/purplehaxttv/F
 flowchart TD
     A[Something is in a cart] --> B{What is it?}
     B -->|Valuable or shop item| C[Shrinks, grows back after leaving]
-    B -->|Player| D[Shrinks, always grows back]
+    B -->|Player| D[Shrinks or grows, normal again after a timer]
     B -->|Enemy on the spared list| E{On the shrink list?}
     B -->|Any other enemy| F[Dies]
     E -->|Yes| G[Shrinks and stays tiny]
@@ -46,9 +46,12 @@ Everything can be changed in the in-game mod settings (with REPOConfig installed
 | Enemies | Scale | 0.5 | Size for listed enemies without their own size |
 | Enemies | Grow back when out of cart | false | Off keeps a shrunk enemy small for the level |
 | Enemies | Grow back when hurt | false | A shrunk enemy grows back on damage |
-| Players | Shrink players in cart | true | Players in the big cart shrink |
+| Players | Shrink players in cart | true | Players in the big cart change size |
 | Players | Scale | 0.5 | Size of a player in a cart |
-| Players | Grow back when hurt | true | A shrunk player grows back on damage |
+| Players | Grow back when hurt | true | A shrunk or enlarged player returns to normal on damage |
+| Players | Chance to grow instead | 25 | Chance in percent that a player gets bigger instead of smaller. 0 = always shrink, 100 = always grow |
+| Players | Grow scale | 1.5 | Size of a player who grew |
+| Players | Seconds until normal size | 20 | How long a player keeps their cart size after leaving the cart |
 
 ## Multiplayer
 
