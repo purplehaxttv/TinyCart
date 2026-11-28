@@ -16,6 +16,7 @@
     <Reference Include="BepInEx"><HintPath>$(ProfileDir)\BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="0Harmony"><HintPath>$(ProfileDir)\BepInEx\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="ScalerCore"><HintPath>$(ProfileDir)\BepInEx\plugins\Vippy-ScalerCore\ScalerCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TinyCart"><HintPath>$(MSBuildProjectDirectory)/../bin/TinyCart.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="REPOLib"><HintPath>$(ProfileDir)\BepInEx\plugins\Zehs-REPOLib\REPOLib.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Assembly-CSharp"><HintPath>$(Managed)\Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(Managed)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
