@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace TinyCart
 {
-    [BepInPlugin(Guid, "Tiny Cart", "1.1.0")]
+    [BepInPlugin(Guid, "Tiny Cart", "1.2.0")]
     [BepInDependency("Vippy.ScalerCore")]
     public class Plugin : BaseUnityPlugin
     {
@@ -56,6 +56,9 @@ namespace TinyCart
         ConfigEntry<bool> shrinkPlayers;
         ConfigEntry<float> playerScale;
         ConfigEntry<bool> playerGrowWhenHurt;
+        ConfigEntry<float> playerGrowChance;
+        ConfigEntry<float> playerGrowScale;
+        ConfigEntry<float> playerNormalAfter;
         ConfigEntry<bool> killEnemies;
         ConfigEntry<string> sparedEnemies;
         ConfigEntry<float> killReach;
@@ -104,11 +107,17 @@ namespace TinyCart
             enemyGrowWhenHurt = Config.Bind("Enemies", "Grow back when hurt", false,
                 "A shrunk enemy returns to normal size when it takes damage.");
             shrinkPlayers = Config.Bind("Players", "Shrink players in cart", true,
-                "A player standing or lying in a cart shrinks, and always grows back after leaving it.");
+                "A player standing or lying in a cart changes size, and always returns to normal after leaving it.");
             playerScale = Config.Bind("Players", "Scale", 0.5f,
                 new ConfigDescription("Size of a player while in a cart.", new AcceptableValueRange<float>(0.1f, 1f)));
             playerGrowWhenHurt = Config.Bind("Players", "Grow back when hurt", true,
-                "A shrunk player returns to normal size when they take damage.");
+                "A shrunk or enlarged player returns to normal size when they take damage.");
+            playerGrowChance = Config.Bind("Players", "Chance to grow instead", 25f,
+                new ConfigDescription("Chance in percent that a player in a cart becomes bigger instead of smaller. 0 = always shrink, 100 = always grow.", new AcceptableValueRange<float>(0f, 100f)));
+            playerGrowScale = Config.Bind("Players", "Grow scale", 1.5f,
+                new ConfigDescription("Size of a player who grew instead of shrinking.", new AcceptableValueRange<float>(1.1f, 3f)));
+            playerNormalAfter = Config.Bind("Players", "Seconds until normal size", 20f,
+                new ConfigDescription("How long a player keeps their cart size after leaving the cart. Players do not use the general grow back delay.", new AcceptableValueRange<float>(0.5f, 600f)));
             killEnemies = Config.Bind("Enemies", "Kill enemies in cart", true,
                 "An enemy that ends up in a cart dies, unless it is on the spared list below.");
             sparedEnemies = Config.Bind("Enemies", "Enemies spared", "Duck,Apex Predator,Gnome",
@@ -130,7 +139,7 @@ namespace TinyCart
             }
             verbose = Config.Bind("Debug", "Verbose log", false, "Log every shrink and grow.");
 
-            Log.LogInfo("Tiny Cart 1.1.0 loaded");
+            Log.LogInfo("Tiny Cart 1.2.0 loaded");
         }
 
         void Update()
@@ -209,7 +218,8 @@ namespace TinyCart
                     continue;
                 }
                 bool mayGrow = t.Player || (t.Enemy ? enemyGrowBack.Value : growBack.Value);
-                if (mayGrow && now - t.LastSeen >= growBackDelay.Value)
+                float delay = t.Player ? playerNormalAfter.Value : growBackDelay.Value;
+                if (mayGrow && now - t.LastSeen >= delay)
                 {
                     Restore(t.Object);
                     scratch.Add(pair.Key);
@@ -266,8 +276,9 @@ namespace TinyCart
             }
             if (ScaleManager.IsScaled(target)) return;
 
-            ScaleOptions options = ScaleOptions.Default;
-            options.Factor = playerScale.Value;
+            bool grow = UnityEngine.Random.value * 100f < playerGrowChance.Value;
+            ScaleOptions options = grow ? ScaleOptions.Growth : ScaleOptions.Default;
+            options.Factor = grow ? playerGrowScale.Value : playerScale.Value;
             options.Duration = 0f;
             options.Speed = shrinkSpeed.Value;
             options.RestoreSpeed = shrinkSpeed.Value;
@@ -275,7 +286,7 @@ namespace TinyCart
             options.SuppressImpactFlash = true;
             options.SuppressCameraShake = true;
             options.IgnoreBonkExpand = !playerGrowWhenHurt.Value;
-            if (options.Factor >= 0.999f) return;
+            if (Mathf.Abs(options.Factor - 1f) < 0.001f) return;
 
             if (!Apply(target, options))
             {
@@ -283,7 +294,7 @@ namespace TinyCart
                 return;
             }
             tracked[id] = new Tracked { Object = target, LastSeen = now, Player = true };
-            if (verbose.Value) Log.LogInfo($"Shrunk player {player.name}");
+            if (verbose.Value) Log.LogInfo($"{(grow ? "Enlarged" : "Shrunk")} player {player.name} to x{options.Factor:F2}");
         }
 
         static bool Apply(GameObject target, ScaleOptions options)

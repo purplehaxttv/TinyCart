@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Players in the cart have a chance to grow bigger instead of shrinking (new settings: Chance to grow instead, 25% by default, and Grow scale, 1.5).
+- Players keep their cart size for 20 seconds after leaving the cart before returning to normal (new setting: Seconds until normal size). Before, they went back after 1.5 seconds.
+
 ## 1.1.0
 
 - Things shrink smaller: valuables and shop items go to 40% of their size instead of half. Configs still on the old 0.5 are updated automatically.
