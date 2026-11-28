@@ -1,6 +1,6 @@
 {
   "name": "TinyCart",
-  "version_number": "1.0.1",
+  "version_number": "1.1.0",
   "website_url": "https://github.com/purplehaxttv/TinyCart",
   "description": "Valuables shrink in the cart and stay shrunk, no flickering. Enemies that touch the cart die, except ducks and gnomes, which turn tiny instead. Players shrink too and grow back when they leave.",
   "dependencies": [

@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace TinyCart
 {
-    [BepInPlugin(Guid, "Tiny Cart", "1.0.1")]
+    [BepInPlugin(Guid, "Tiny Cart", "1.1.0")]
     [BepInDependency("Vippy.ScalerCore")]
     public class Plugin : BaseUnityPlugin
     {
@@ -59,6 +59,8 @@ namespace TinyCart
         ConfigEntry<bool> killEnemies;
         ConfigEntry<string> sparedEnemies;
         ConfigEntry<float> killReach;
+        ConfigEntry<float> maxSize;
+        ConfigEntry<bool> shrinkCosmetics;
         ConfigEntry<bool> verbose;
 
         readonly Dictionary<int, Tracked> tracked = new Dictionary<int, Tracked>();
@@ -75,13 +77,13 @@ namespace TinyCart
             transform.parent = null;
             gameObject.hideFlags = HideFlags.HideAndDontSave;
 
-            valuableScale = Config.Bind("Valuables", "Scale", 0.5f,
+            valuableScale = Config.Bind("Valuables", "Scale", 0.4f,
                 new ConfigDescription("Size of a valuable while it sits in a cart (1 = normal size).", new AcceptableValueRange<float>(0.1f, 1f)));
             lighterWhenSmall = Config.Bind("Valuables", "Lighter when small", true,
                 "Shrunk things also weigh less, so a full cart is easier to push.");
             shrinkItems = Config.Bind("Items", "Shrink shop items", true,
                 "Also shrink bought items (weapons, grenades, health packs and so on) in a cart.");
-            itemScale = Config.Bind("Items", "Scale", 0.5f,
+            itemScale = Config.Bind("Items", "Scale", 0.4f,
                 new ConfigDescription("Size of a bought item while it sits in a cart.", new AcceptableValueRange<float>(0.1f, 1f)));
             growBack = Config.Bind("General", "Grow back when removed", true,
                 "Things return to normal size after they have been out of every cart for the delay below. Off = they stay small for the rest of the level.");
@@ -113,9 +115,22 @@ namespace TinyCart
                 "Comma separated list of enemy names the cart never kills. * = spare every enemy.");
             killReach = Config.Bind("Enemies", "Kill reach", 0.3f,
                 new ConfigDescription("How far outside the cart's basket an enemy still counts as hit, in metres. 0 = only enemies inside the basket die.", new AcceptableValueRange<float>(0f, 1.5f)));
+            maxSize = Config.Bind("General", "Largest size in cart", 0.8f,
+                new ConfigDescription("Longest side, in metres, a valuable, item or cosmetic box may have in a cart. Anything still longer than this after the normal shrink is shrunk further until it fits. Set it to 10 to switch this off.", new AcceptableValueRange<float>(0.3f, 10f)));
+            shrinkCosmetics = Config.Bind("Cosmetics", "Shrink cosmetic boxes", true,
+                "Also shrink the cosmetic boxes found in levels. They use the valuables scale.");
+
+            // 1.0 shipped with 0.5; move configs still on that default to the smaller one.
+            ConfigEntry<int> settingsVersion = Config.Bind("Debug", "Settings version", 1, "Used by the mod to update old defaults. Leave it alone.");
+            if (settingsVersion.Value < 2)
+            {
+                if (Mathf.Approximately(valuableScale.Value, 0.5f)) valuableScale.Value = (float)valuableScale.DefaultValue;
+                if (Mathf.Approximately(itemScale.Value, 0.5f)) itemScale.Value = (float)itemScale.DefaultValue;
+                settingsVersion.Value = 2;
+            }
             verbose = Config.Bind("Debug", "Verbose log", false, "Log every shrink and grow.");
 
-            Log.LogInfo("Tiny Cart 1.0.1 loaded");
+            Log.LogInfo("Tiny Cart 1.1.0 loaded");
         }
 
         void Update()
@@ -360,7 +375,7 @@ namespace TinyCart
                 return;
             }
             tracked[id] = new Tracked { Object = target, LastSeen = now, Enemy = enemy };
-            if (verbose.Value) Log.LogInfo($"Shrunk {target.name} to x{options.Factor}");
+            if (verbose.Value) Log.LogInfo($"Shrunk {target.name} to x{options.Factor:F2}");
         }
 
         void Restore(GameObject target)
@@ -404,22 +419,69 @@ namespace TinyCart
                 return true;
             }
 
-            if (target.GetComponent<ValuableObject>())
+            float wanted;
+            if (target.GetComponent<ValuableObject>()) wanted = valuableScale.Value;
+            else if (target.GetComponent<CosmeticWorldObject>())
             {
-                options.Factor = valuableScale.Value;
-                options.AllowedTargets = ScaleTargets.Valuables | ScaleTargets.Items;
-                return options.Factor < 0.999f;
+                if (!shrinkCosmetics.Value) return false;
+                wanted = valuableScale.Value;
             }
-
-            if (target.GetComponent<ItemAttributes>())
+            else if (target.GetComponent<ItemAttributes>())
             {
                 if (!shrinkItems.Value) return false;
-                options.Factor = itemScale.Value;
-                options.AllowedTargets = ScaleTargets.Valuables | ScaleTargets.Items;
-                return options.Factor < 0.999f;
+                wanted = itemScale.Value;
             }
+            else return false;
 
-            return false;
+            options.Factor = FitFactor(target, wanted, maxSize.Value);
+            options.AllowedTargets = ScaleTargets.Valuables | ScaleTargets.Items;
+            return options.Factor < 0.999f;
+        }
+
+        // The wanted scale, or a smaller one when the thing would still be longer than the limit.
+        public static float FitFactor(GameObject target, float wanted, float limit)
+        {
+            float longest = LongestSide(target);
+            if (longest <= 0f || longest * wanted <= limit) return wanted;
+            return Mathf.Clamp(limit / longest, 0.1f, wanted);
+        }
+
+        // Longest side of the solid part of an object, measured along its own axes so the result
+        // does not depend on how it happens to be lying.
+        public static float LongestSide(GameObject target)
+        {
+            Transform root = target.transform;
+            bool any = false;
+            Vector3 min = Vector3.zero, max = Vector3.zero;
+            foreach (Collider collider in target.GetComponentsInChildren<Collider>())
+            {
+                if (collider.isTrigger) continue;
+                Vector3 centre, half;
+                if (collider is BoxCollider box) { centre = box.center; half = box.size * 0.5f; }
+                else if (collider is SphereCollider sphere) { centre = sphere.center; half = Vector3.one * sphere.radius; }
+                else if (collider is CapsuleCollider capsule)
+                {
+                    centre = capsule.center;
+                    half = Vector3.one * capsule.radius;
+                    half[capsule.direction] = Mathf.Max(capsule.height * 0.5f, capsule.radius);
+                }
+                else if (collider is MeshCollider mesh && mesh.sharedMesh) { centre = mesh.sharedMesh.bounds.center; half = mesh.sharedMesh.bounds.extents; }
+                else continue;
+
+                for (int corner = 0; corner < 8; corner++)
+                {
+                    Vector3 local = centre + new Vector3(
+                        (corner & 1) == 0 ? -half.x : half.x,
+                        (corner & 2) == 0 ? -half.y : half.y,
+                        (corner & 4) == 0 ? -half.z : half.z);
+                    Vector3 point = Vector3.Scale(root.InverseTransformPoint(collider.transform.TransformPoint(local)), root.lossyScale);
+                    if (!any) { min = max = point; any = true; }
+                    else { min = Vector3.Min(min, point); max = Vector3.Max(max, point); }
+                }
+            }
+            if (!any) return 0f;
+            Vector3 size = max - min;
+            return Mathf.Max(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
         }
 
         static bool Listed(GameObject target, string list, out float size)

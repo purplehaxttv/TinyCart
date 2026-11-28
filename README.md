@@ -4,7 +4,8 @@ A shrinking cart for R.E.P.O. that stays calm: things go small when they go in t
 
 ## What it does
 
-- **Valuables and shop items** shrink to half size in any cart and weigh less, so a full cart is easier to push. They grow back about 1.5 seconds after leaving the cart.
+- **Valuables, shop items and cosmetic boxes** shrink to 40% of their size in any cart and weigh less, so a full cart is easier to push. They grow back about 1.5 seconds after leaving the cart.
+- **Big things shrink further until they fit.** Nothing in a cart stays longer than 0.8 m, so a grandfather clock or a traffic light ends up small enough to lie in the basket.
 - **No flickering.** A shrunk valuable does not pop back to full size when it gets bumped or loses value, and nothing changes size while it sits on the cart's edge.
 - **Enemies that touch the cart die**, except the ones on the spared list.
 - **Ducks and gnomes are spared and shrink instead.** They go down to half size and stay tiny for the rest of the level.
@@ -28,10 +29,12 @@ Everything can be changed in the in-game mod settings (with REPOConfig installed
 
 | Section | Setting | Default | What it does |
 | --- | --- | --- | --- |
-| Valuables | Scale | 0.5 | Size of a valuable in a cart |
+| Valuables | Scale | 0.4 | Size of a valuable in a cart |
 | Valuables | Lighter when small | true | Shrunk things weigh less |
 | Items | Shrink shop items | true | Bought items shrink too |
-| Items | Scale | 0.5 | Size of a bought item in a cart |
+| Items | Scale | 0.4 | Size of a bought item in a cart |
+| Cosmetics | Shrink cosmetic boxes | true | Cosmetic boxes found in levels shrink too, at the valuables scale |
+| General | Largest size in cart | 0.8 | Longest side in metres anything may keep in a cart; bigger things shrink further. 10 = off |
 | General | Grow back when removed | true | Off keeps things small for the rest of the level |
 | General | Grow back delay | 1.5 | Seconds out of the cart before growing back |
 | General | Shrink speed | 2 | How fast the size change plays |

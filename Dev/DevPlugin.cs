@@ -23,7 +23,7 @@ namespace TinyCartDev
             L = Logger;
             transform.parent = null;
             gameObject.hideFlags = HideFlags.HideAndDontSave;
-            StartCoroutine(Run());
+            StartCoroutine(Environment.GetEnvironmentVariable("TINYCART_TEST") == "fit" ? FitTest.Run(Say) : Run());
         }
 
         static void Say(string s) => L.LogInfo("DEVTEST " + s);
